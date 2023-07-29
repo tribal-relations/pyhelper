@@ -12,6 +12,7 @@ class CardManager:
     # dpi 300
     a9_vertical_step = 438
     a9_horizontal_step = 620
+    card_left_margin = 80
     # dpi 72
     # a9_vertical_step = 105 * 4
     # a9_horizontal_step = 149 * 4
@@ -99,7 +100,7 @@ class CardManager:
         black = (0, 0, 0)
         resource = Data.get_resources()[resource_key]
         image_draw.text(
-            (x + 10, y),
+            (x + self.card_left_margin, y),
             resource_key,
             font=my_font,
             fill=black
@@ -109,11 +110,11 @@ class CardManager:
         for key, value in resource.items():
             if key == 'quantity':
                 continue
-            width_in_chars = 15
+            width_in_chars = 12
             spaces = width_in_chars - 1 - len(key)
             if value != 0:
                 image_draw.text(
-                    (x + 20, y + (130 + (i * 70))),
+                    (x + self.card_left_margin + 30, y + (130 + (i * 70))),
                     key + ' ' * spaces + str(value),
                     font=ImageFont.truetype(font_path, 44),
                     fill=black
