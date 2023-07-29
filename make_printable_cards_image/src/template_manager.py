@@ -3,7 +3,7 @@ import os
 
 class TemplateManager:
     root_dir = '/Users/gena/code/projects/tribal-relations/pyhelper'
-    template_storage_dir = 'storage/templates'
+    template_storage_dir = 'storage/templates/dpi300'
     output_storage_dir = 'storage/output'
 
     size_to_filename_map = {
