@@ -7,15 +7,40 @@ import random
 from src.dashed_image_draw import DashedImageDraw
 from src.data import Data
 
+A4WIDTH = 2479
+A4HEIGHT = 3508
 
 class CardManager:
-    # dpi 300
-    a9_vertical_step = 438
-    a9_horizontal_step = 620
-    card_left_margin = 80
-    # dpi 72
-    # a9_vertical_step = 105 * 4
-    # a9_horizontal_step = 149 * 4
+    def __init__(self):
+        # dpi 300 with dynamic margins
+        # self.page_margin = 80  # from all sides
+        self.vertical_page_margin = 160
+        self.horizontal_page_margin = 80
+        height_with_margins = A4HEIGHT - (2 * self.vertical_page_margin)
+        width_with_margins = A4WIDTH - (2 * self.horizontal_page_margin)
+
+        self.a9_vertical_step = math.floor(height_with_margins / 8)
+        self.a9_horizontal_step = math.floor(width_with_margins / 4)
+        self.card_left_margin = 80
+        
+        # dpi 300 with margins to accomodate smaller cardboard
+        # 2479x3508 px => 2319x3348
+        # page_margin = 80  # from all sides
+        # a9_vertical_step = 418
+        # a9_horizontal_step = 580
+        # card_left_margin = 80
+
+        # dpi 300
+        # a9_vertical_step = 438
+        # a9_horizontal_step = 620
+        # card_left_margin = 80
+
+        # dpi 72
+        # a9_vertical_step = 105 * 4
+        # a9_horizontal_step = 149 * 4
+        
+
+
     size_to_orientation_map = {
         'a8': 'vertical',
         'a9': 'horizontal',
@@ -41,9 +66,10 @@ class CardManager:
 
         cards_count = self.size_to_cards_number_map[size]
         resources_keys = self.get_random_resources_keys(size)
-        assert(cards_count == len(resources_keys))
+        assert (cards_count == len(resources_keys))
         for index in range(cards_count):
-            image = self.add_card_to_image(image, size, index, resources_keys[index])
+            image = self.add_card_to_image(
+                image, size, index, resources_keys[index])
 
         return image
 
@@ -55,15 +81,12 @@ class CardManager:
         return image
 
     def get_coordinates_by_size(self, size: str, index: int):
-        if (index == 0):
-            return 0, 0
-
         in_a_row = self.size_to_cards_in_a_row_map[size]
         horizontal_coefficient = self.a9_horizontal_step * (index % in_a_row)
         vertical_coefficient = self.a9_vertical_step * \
             math.floor(index / in_a_row)
 
-        return horizontal_coefficient, vertical_coefficient
+        return self.horizontal_page_margin + horizontal_coefficient, self.vertical_page_margin + vertical_coefficient
 
     def insert_card(self, image: Image, x: int, y: int, resource_key: str) -> Image:
         assert (image != None)
@@ -95,7 +118,7 @@ class CardManager:
     def write_card(self, image: Image, x: int, y: int, resource_key: str) -> Image:
         image_draw = ImageDraw.Draw(image)
         font_path = '/Users/gena/Library/Fonts/NotoSansMono-Regular.ttf'
-        my_font = ImageFont.truetype(font_path, 76)
+        my_font = ImageFont.truetype(font_path, 70)
 
         black = (0, 0, 0)
         resource = Data.get_resources()[resource_key]
@@ -114,7 +137,7 @@ class CardManager:
             spaces = width_in_chars - 1 - len(key)
             if value != 0:
                 image_draw.text(
-                    (x + self.card_left_margin + 30, y + (130 + (i * 70))),
+                    (x + self.card_left_margin + 30, y + (110 + (i * 70))),
                     key + ' ' * spaces + str(value),
                     font=ImageFont.truetype(font_path, 44),
                     fill=black
@@ -122,13 +145,12 @@ class CardManager:
             i += 1
         return image
 
-
     def get_random_resource(self, ) -> dict:
         resources = Data.get_resources()
         keys = list(resources.keys())
         resource_key = random.choice(keys)
         return resource_key, resources[resource_key]
-    
+
     def get_random_resources_keys(self, size: str) -> dict:
         resources = Data.get_resources()
         keys = list(resources.keys())
@@ -136,5 +158,6 @@ class CardManager:
         for k in keys:
             weights.append(resources[k]['quantity'])
 
-        resource_keys = random.choices(keys, weights, k=self.size_to_cards_number_map[size])
+        resource_keys = random.choices(
+            keys, weights, k=self.size_to_cards_number_map[size])
         return resource_keys
