@@ -1,10 +1,9 @@
-#pyhelper.make_printable_cards_image.src
-from src.territory_card_manager import TerritoryCardManager
+from src.technologies.technology_card_manager import TechnologyCardManager
 from src.template_manager import TemplateManager
 from PIL import Image
 
 
-class Territory:
+class Technologies:
     orientation = 'horizontal'
     size = 'a9'
     output_filename = ''
@@ -21,7 +20,7 @@ class Territory:
 
     def get_template_file_name(self) -> str:
         tm = TemplateManager()
-        return tm.get_template_file_name_by_size(self.size, title='territory')
+        return tm.get_template_file_name_by_size(self.size, title='technology')
         return f'{self.size}.png'
 
     def get_template_image(self, template_file_name: str) -> Image:
@@ -31,8 +30,8 @@ class Territory:
         return image
 
     def add_territory_cards(self, image: Image) -> Image:
-        cm = TerritoryCardManager()
-        updated_image = cm.add_territory_cards(
+        cm = TechnologyCardManager()
+        updated_image = cm.add_cards(
             image, self.size, self.orientation)
         return updated_image
 

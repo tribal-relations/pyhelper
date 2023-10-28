@@ -1,19 +1,20 @@
-#pyhelper.make_printable_cards_image.src
-from src.territory_card_manager import TerritoryCardManager
+from src.relations_card_manager import RelationsCardManager
 from src.template_manager import TemplateManager
 from PIL import Image
 
 
-class Territory:
-    orientation = 'horizontal'
-    size = 'a9'
-    output_filename = ''
+class Relations:
+    def __init__(self) -> None:
+        self.orientation = 'vertical'
+        self.size = 'a8'
+        self.output_filename = ''
+    
     # public
-
+    
     def create_printable_cards_images(self):
         template_file_name = self.get_template_file_name()
         template_image = self.get_template_image(template_file_name)
-        updated_image = self.add_territory_cards(template_image)
+        updated_image = self.add_relations_cards(template_image)
         self.save_image(updated_image)
 
 
@@ -21,7 +22,7 @@ class Territory:
 
     def get_template_file_name(self) -> str:
         tm = TemplateManager()
-        return tm.get_template_file_name_by_size(self.size, title='territory')
+        return tm.get_template_file_name_by_size(self.size, title='relations')
         return f'{self.size}.png'
 
     def get_template_image(self, template_file_name: str) -> Image:
@@ -30,9 +31,9 @@ class Territory:
         image = Image.open(template_file_name)
         return image
 
-    def add_territory_cards(self, image: Image) -> Image:
-        cm = TerritoryCardManager()
-        updated_image = cm.add_territory_cards(
+    def add_relations_cards(self, image: Image) -> Image:
+        cm = RelationsCardManager()
+        updated_image = cm.add_cards(
             image, self.size, self.orientation)
         return updated_image
 

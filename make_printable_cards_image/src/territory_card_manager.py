@@ -3,17 +3,17 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 import math
-import numpy as np
+import random
+from src.card_manager import CardManager
 from src.dashed_image_draw import DashedImageDraw
 from src.data import Data
-import textwrap
 
 A4WIDTH = 2479
 A4HEIGHT = 3508
 
-
-class CardManager:
+class TerritoryCardManager:
     def __init__(self):
+        self.card_manager = CardManager()
         # dpi 300 with dynamic margins
         # self.page_margin = 80  # from all sides
         self.vertical_page_margin = 160
@@ -24,7 +24,7 @@ class CardManager:
         self.a9_vertical_step = math.floor(height_with_margins / 8)
         self.a9_horizontal_step = math.floor(width_with_margins / 4)
         self.card_left_margin = 80
-
+        
         # dpi 300 with margins to accomodate smaller cardboard
         # 2479x3508 px => 2319x3348
         # page_margin = 80  # from all sides
@@ -40,6 +40,8 @@ class CardManager:
         # dpi 72
         # a9_vertical_step = 105 * 4
         # a9_horizontal_step = 149 * 4
+        
+
 
     size_to_orientation_map = {
         'a8': 'vertical',
@@ -59,27 +61,26 @@ class CardManager:
 
     # public
 
-    def add_card_to_image(self, image: Image, size: str, index: int, resource_key: str) -> Image:
-        x, y = self.get_coordinates_by_size(size, index)
-        image = self.insert_card(image, x, y, resource_key)
+    def add_territory_cards(self, image: Image, size: str, orientation: str) -> Image:
+        if (self.size_to_orientation_map[size] != orientation):
+            image = self.rotate_image_90(image)
+        image = self.make_blank(image)
+
+        cards_count = self.size_to_cards_number_map[size]
+        resources_keys = self.get_random_resources_keys(size)
+        assert (cards_count == len(resources_keys))
+        for index in range(cards_count):
+            image = self.add_card_to_image(
+                image, size, index, resources_keys[index])
+
         return image
 
-    def get_coordinates_by_size(self, size: str, index: int):
-        in_a_row = self.size_to_cards_in_a_row_map[size]
-        horizontal_coefficient = self.a9_horizontal_step * (index % in_a_row)
-        vertical_coefficient = self.a9_vertical_step * \
-            math.floor(index / in_a_row)
+    # private
 
-        return self.horizontal_page_margin + horizontal_coefficient, self.vertical_page_margin + vertical_coefficient
-
-    def get_coordinates_a8(self, index: int):
-        in_a_row = self.size_to_cards_in_a_row_map['a8']
-        horizontal_coefficient = self.a9_horizontal_step * (index % in_a_row)
-        vertical_coefficient = self.a9_vertical_step * 2 * \
-            math.floor(index / in_a_row)
-
-        return self.horizontal_page_margin + horizontal_coefficient, self.vertical_page_margin + vertical_coefficient
-
+    def add_card_to_image(self, image: Image, size: str, index: int, resource_key: str) -> Image:
+        x, y = self.card_manager.get_coordinates_by_size(size, index)
+        image = self.insert_card(image, x, y, resource_key)
+        return image
 
     def insert_card(self, image: Image, x: int, y: int, resource_key: str) -> Image:
         assert (image != None)
@@ -108,19 +109,6 @@ class CardManager:
 
         return image
 
-
-    def draw_border_a8(self, image: Image, x: int, y: int)->Image:
-        d = DashedImageDraw(image)
-
-        d.dashed_rectangle(
-            [(x, y), (x + self.a9_horizontal_step, y + self.a9_vertical_step * 2)],
-            dash=(5, 40),
-            outline='black',
-            width=1
-        )
-
-        return image
-    
     def write_card(self, image: Image, x: int, y: int, resource_key: str) -> Image:
         image_draw = ImageDraw.Draw(image)
         font_path = '/Users/gena/Library/Fonts/NotoSansMono-Regular.ttf'
@@ -150,18 +138,20 @@ class CardManager:
                 )
             i += 1
         return image
-    
-    
-    def write_multiline_text(self, image: Image, x: int, y: int, text:str, font:ImageFont, wrap_after:int=20, line_spacing:int=40) -> Image:
-        image_draw = ImageDraw.Draw(image)
-        black = (0, 0, 0)
-        lines = textwrap.wrap(text, width=wrap_after)
-        for index, line in enumerate(lines):
-            image_draw.text(
-                (x, y + index * line_spacing),
-                line,
-                font=font,
-                fill=black
-            )
-        return image
-    # private
+
+    def get_random_resource(self, ) -> dict:
+        resources = Data.get_resources()
+        keys = list(resources.keys())
+        resource_key = random.choice(keys)
+        return resource_key, resources[resource_key]
+
+    def get_random_resources_keys(self, size: str) -> dict:
+        resources = Data.get_resources()
+        keys = list(resources.keys())
+        weights = []
+        for k in keys:
+            weights.append(resources[k]['quantity'])
+
+        resource_keys = random.choices(
+            keys, weights, k=self.size_to_cards_number_map[size])
+        return resource_keys
